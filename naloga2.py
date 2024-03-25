@@ -48,6 +48,23 @@ def filtriraj_sobel_horizontalno(slika):
 
     return filtrirana_slika
 
+def filtriraj_sobel_vertikalno(slika):
+    slika = slika.astype(np.float32)
+    sobel_vertikalno_jedro = np.array([[-1, -2, -1],
+                                       [ 0,  0,  0],
+                                       [ 1,  2,  1]], dtype=np.float32)
+    if slika.ndim == 3:
+        slika_gray = cv.cvtColor(slika, cv.COLOR_BGR2GRAY)
+    else:
+        slika_gray = slika
+    filtrirana_slika = konvolucija(slika_gray, sobel_vertikalno_jedro)
+    filtrirana_slika = cv.convertScaleAbs(filtrirana_slika)  # Pretvorba v 8-bitno sliko
+    filtrirana_slika = cv.normalize(filtrirana_slika, None, 0, 255, cv.NORM_MINMAX)
+    return filtrirana_slika
+
+def filtriraj_sobel_oboje(slika):
+    return cv.bitwise_or(filtriraj_sobel_horizontalno(slika), filtriraj_sobel_vertikalno(slika))
+
 
 
 class ImageApp:
@@ -151,7 +168,9 @@ class ImageApp:
         filter_commands = {
             '1': lambda: self.__apply_filter(1),
             '2': lambda: self.__apply_filter(2),
-            '6': lambda: self.__apply_filter(6)
+            '3': lambda: self.__apply_filter(3),
+            '4': lambda: self.__apply_filter(4),
+            '5': lambda: self.__apply_filter(5),
         }
 
         self.filter_commands.update(filter_commands)
@@ -203,6 +222,18 @@ class ImageApp:
             # Apply Gaussian filter
             if self.mode == "image" and self.image_original is not None:
                 self.image_processed = filtriraj_z_gaussovim_jedrom(self.image_processed, sigma=2)
+        elif mode == 3:
+            # Apply Sobel horizontal filter
+            if self.mode == "image" and self.image_original is not None:
+                self.image_processed = filtriraj_sobel_horizontalno(self.image_processed)
+        elif mode == 4:
+            # Apply Sobel vertical filter
+            if self.mode == "image" and self.image_original is not None:
+                self.image_processed = filtriraj_sobel_vertikalno(self.image_processed)
+        elif mode == 5:
+            # Apply Sobel both filters
+            if self.mode == "image" and self.image_original is not None:
+                self.image_processed = filtriraj_sobel_oboje(self.image_processed)
 
     # Image processing functions
     def __load_camera(self):
