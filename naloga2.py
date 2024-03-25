@@ -35,16 +35,19 @@ def filtriraj_z_gaussovim_jedrom(slika, sigma):
 
 class ImageApp:
     def __init__(self):
-        self.running = True
+        self.running = True # Flag to keep the app running
 
-        self.frame_processed = None
-        self.frame_original = None
-        self.image_original = None
-        self.image_processed = None
+        self.frame_processed = None # Store the current frame
+        self.frame_original = None # Store the original frame before any modifications
+        self.image_original = None  # Store the last image shown in image mode
+        self.image_processed = None  # Store the last image processed in image mode
 
-        self.frame_overlay = None
-        self.image_overlay = None
+        self.frame_overlay = None  # Store the overlay frame
+        self.image_overlay = None  # Store the overlay image
 
+        self.camera = None
+
+        self.mode = "image"  # Start in image mode
         self.filter_mode = 1
 
         self.window_name = "ImageApp"
@@ -55,6 +58,7 @@ class ImageApp:
         self.root.withdraw()  # Hide the main window of tkinter
 
         self.image_mode_commands = {}
+        self.camera_mode_commands = {}
         self.filter_commands = {}
         self.__setup_commands()
 
@@ -68,11 +72,57 @@ class ImageApp:
         cv.namedWindow(window_name, cv.WINDOW_NORMAL)
         cv.imshow(window_name, image)
         cv.waitKey(1)
+
+    def __show_overlay(self):
+        self.image_overlay = self.image_processed.copy()
+
+        cv.putText(self.image_processed, "Loading...", (350, 300), cv.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2, cv.LINE_AA)
+        
+        self.__show_image()
+
+        self.image_processed = self.image_overlay
+
+        cv.waitKey(1)
+
+    def __camera_initialize(self):
+        if self.camera is None:
+            self.camera = cv.VideoCapture(0)
+            if not self.camera.isOpened():
+                print("Error: Camera could not be accessed.")
+
+    def __camera_release(self):
+        if self.camera is not None:
+            self.camera.release()
+            self.camera = None
+
+    def __capture_frame(self):
+        if self.mode == "camera":
+            self.__set_image(self.frame_original)
+            self.__toggle_mode()  # Switch to image mode after capturing
+
+    def __toggle_mode(self):
+        if self.mode == "camera":
+            self.__camera_release()
+            self.mode = "image"
+            print("Image mode enabled.")
+            # self.__show_image()
+        else:
+            self.mode = "camera"
+            print("Camera mode enabled.")
     
     # 1. Commands
     def __setup_commands(self):
+        # Setup commands based on mode
         self.image_mode_commands = {
             'l': self.__load_image,
+            't': self.__toggle_mode,
+            'o': self.__show_commands,
+            'q': self.__stop
+        }
+
+        self.camera_mode_commands = {
+            'c': self.__capture_frame,
+            't': self.__toggle_mode,
             'o': self.__show_commands,
             'q': self.__stop
         }
@@ -81,13 +131,14 @@ class ImageApp:
         filter_commands = {
             '1': lambda: self.__apply_filter(1),
             '2': lambda: self.__apply_filter(2),
+            '6': lambda: self.__apply_filter(6)
         }
 
         self.filter_commands.update(filter_commands)
 
     def __show_commands(self):
         print("Available commands:")
-        commands = self.image_mode_commands
+        commands = self.image_mode_commands if self.mode == "image" else self.camera_mode_commands
         for command, action in commands.items():
             print(f" - Press '{command}' to {action.__name__}")
 
@@ -110,14 +161,31 @@ class ImageApp:
     # Filter functions
     def __apply_filter(self, mode):
         self.filter_mode = mode
+        self.__show_overlay()
         if mode == 1:
             # Display original image/frame
-            if self.image_original is not None:
+            if self.mode == "image" and self.image_original is not None:
                 self.image_processed = self.image_original.copy()
         elif mode == 2:
             # Apply Gaussian filter
-            if self.image_original is not None:
+            if self.mode == "image" and self.image_original is not None:
                 self.image_processed = filtriraj_z_gaussovim_jedrom(self.image_processed, sigma=2)
+
+    # Image processing functions
+    def __load_camera(self):
+        if self.camera is None:
+            self.__camera_initialize()
+
+        success, frame = self.camera.read()
+        if success:
+            self.__show_camera_image(frame)
+        else:
+            print("Error capturing image from camera.")
+
+    def __show_camera_image(self, frame):
+        self.frame_original = frame
+        self.frame_processed = frame.copy()
+        cv.imshow(self.window_name, self.frame_processed)
 
     def __show_image(self):
         if self.image_processed is not None and self.image_processed.size > 0:
@@ -130,11 +198,15 @@ class ImageApp:
     def __run(self):
         while self.running:
 
-            self.__show_image()
-            cv.waitKey(1)
+            if self.mode == "image":
+                self.__show_image()
+                cv.waitKey(1)
+            elif self.mode == "camera":
+                self.__load_camera()
 
+            
             key = cv.waitKey(1) & 0xFF
-            commands = self.image_mode_commands
+            commands = self.image_mode_commands if self.mode == "image" else self.camera_mode_commands
             if chr(key) in commands:
                 commands[chr(key)]()
             if chr(key) in self.filter_commands:
@@ -142,6 +214,7 @@ class ImageApp:
 
     def __stop(self):
         self.running = False
+        self.__camera_release()
         cv.destroyAllWindows()
 
     def start(self):
