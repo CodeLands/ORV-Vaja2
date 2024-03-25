@@ -115,6 +115,7 @@ class ImageApp:
         # Setup commands based on mode
         self.image_mode_commands = {
             'l': self.__load_image,
+            's': self.__save_image,
             't': self.__toggle_mode,
             'o': self.__show_commands,
             'q': self.__stop
@@ -157,6 +158,10 @@ class ImageApp:
             else:
                 print("Error loading image from file.")
         self.__redraw_window(self.window_name, self.image_processed)
+
+    def __save_image(self):
+        cv.imwrite("saved_image.png", self.image_processed)
+        print("Image saved as saved_image.png.")
 
     # Filter functions
     def __apply_filter(self, mode):
