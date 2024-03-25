@@ -33,6 +33,23 @@ def filtriraj_z_gaussovim_jedrom(slika, sigma):
     
     return konvolucija(slika, gaussovo_jedro)
 
+def filtriraj_sobel_horizontalno(slika):
+    slika = slika.astype(np.float32)
+    sobel_horizontalno_jedro = np.array([[-1, 0, 1],
+                                         [-2, 0, 2],
+                                         [-1, 0, 1]], dtype=np.float32)
+    if slika.ndim == 3:
+        slika_gray = cv.cvtColor(slika, cv.COLOR_BGR2GRAY)
+    else:
+        slika_gray = slika
+    filtrirana_slika = konvolucija(slika_gray, sobel_horizontalno_jedro)
+    filtrirana_slika = cv.convertScaleAbs(filtrirana_slika)  # Pretvorba v 8-bitno sliko
+    filtrirana_slika = cv.normalize(filtrirana_slika, None, 0, 255, cv.NORM_MINMAX)
+
+    return filtrirana_slika
+
+
+
 class ImageApp:
     def __init__(self):
         self.running = True # Flag to keep the app running
