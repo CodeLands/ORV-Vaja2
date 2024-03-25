@@ -1,4 +1,7 @@
 import numpy as np
+import cv2 as cv
+import tkinter as tk
+from tkinter import filedialog
 
 # Main funkcije
 def konvolucija(slika, jedro):
@@ -29,3 +32,95 @@ def filtriraj_z_gaussovim_jedrom(slika, sigma):
     #gaussovo_jedro /= gaussovo_jedro.sum()
     
     return konvolucija(slika, gaussovo_jedro)
+
+class ImageApp:
+    def __init__(self):
+        self.running = True
+
+        self.frame_processed = None
+        self.frame_original = None
+        self.image_original = None
+        self.image_processed = None
+
+        self.frame_overlay = None
+        self.image_overlay = None
+
+        self.window_name = "ImageApp"
+        cv.namedWindow(self.window_name, cv.WINDOW_NORMAL)
+        self.window_size = (800, 600)
+
+        self.root = tk.Tk()
+        self.root.withdraw()  # Hide the main window of tkinter
+
+        self.image_mode_commands = {}
+        self.__setup_commands()
+
+        # Initial black screen with "No image" text
+        self.__set_image(np.zeros(self.window_size, dtype=np.uint8))  # Start with a black screen
+        cv.putText(self.image_processed, "No image", (325, 300), cv.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2, cv.LINE_AA)
+        self.__show_image()
+
+    def __redraw_window(self, window_name, image):
+        cv.destroyWindow(window_name)
+        cv.namedWindow(window_name, cv.WINDOW_NORMAL)
+        cv.imshow(window_name, image)
+        cv.waitKey(1)
+    
+    # 1. Commands
+    def __setup_commands(self):
+        self.image_mode_commands = {
+            'l': self.__load_image,
+            'o': self.__show_commands,
+            'q': self.__stop
+        }
+
+    def __show_commands(self):
+        print("Available commands:")
+        commands = self.image_mode_commands
+        for command, action in commands.items():
+            print(f" - Press '{command}' to {action.__name__}")
+
+    # 2. Utility functions
+    # 2.1 Image functions
+    def __set_image(self, image):
+        self.image_original = cv.resize(image, self.window_size)
+        self.image_processed = self.image_original.copy()
+
+    def __load_image(self):
+        file_path = filedialog.askopenfilename(filetypes=[("Image files", "*.jpg;*.jpeg;*.png;*.bmp")])
+        if file_path:
+            image = cv.imread(file_path, cv.IMREAD_COLOR)
+            if image is not None:
+                self.__set_image(image)
+            else:
+                print("Error loading image from file.")
+        self.__redraw_window(self.window_name, self.image_processed)
+
+    def __show_image(self):
+        if self.image_processed is not None and self.image_processed.size > 0:
+            cv.imshow(self.window_name, self.image_processed)
+        else:
+            print("Napaka: Slika nima veljavnih dimenzij.")
+
+    # Process functions
+    def __run(self):
+        while self.running:
+
+            self.__show_image()
+            cv.waitKey(1)
+
+            key = cv.waitKey(1) & 0xFF
+            commands = self.image_mode_commands
+            if chr(key) in commands:
+                commands[chr(key)]()
+
+    def __stop(self):
+        self.running = False
+        cv.destroyAllWindows()
+
+    def start(self):
+        self.__run()
+
+if __name__ == "__main__":
+    app = ImageApp()
+    app.start()
