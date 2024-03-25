@@ -118,6 +118,7 @@ class ImageApp:
             's': self.__save_image,
             't': self.__toggle_mode,
             'o': self.__show_commands,
+            'f': self.__flip_image,
             'q': self.__stop
         }
 
@@ -162,6 +163,11 @@ class ImageApp:
     def __save_image(self):
         cv.imwrite("saved_image.png", self.image_processed)
         print("Image saved as saved_image.png.")
+
+    def __flip_image(self):
+        if self.image_processed is not None:
+            self.image_processed = cv.flip(self.image_processed, 1)
+            self.image_original = cv.flip(self.image_original, 1)
 
     # Filter functions
     def __apply_filter(self, mode):
