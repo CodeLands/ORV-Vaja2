@@ -65,7 +65,18 @@ def filtriraj_sobel_vertikalno(slika):
 def filtriraj_sobel_oboje(slika):
     return cv.bitwise_or(filtriraj_sobel_horizontalno(slika), filtriraj_sobel_vertikalno(slika))
 
+def povdari_sobel(slika, sigma=1.5, prag=120):
+    # 1. Uporabi Gaussov filter na originalni sliki
+    gladka_slika = filtriraj_z_gaussovim_jedrom(slika, sigma)
+    
+    sobel_oboje = filtriraj_sobel_oboje(gladka_slika)
 
+    _, močni_gradineti = cv.threshold(sobel_oboje, prag, 255, cv.THRESH_BINARY) # returns thresholded image in format 0 or 255
+
+    rezultat = slika.copy()
+    rezultat[močni_gradineti == 255] = [255, 0, 0]  # BGR
+
+    return rezultat
 
 class ImageApp:
     def __init__(self):
@@ -171,6 +182,7 @@ class ImageApp:
             '3': lambda: self.__apply_filter(3),
             '4': lambda: self.__apply_filter(4),
             '5': lambda: self.__apply_filter(5),
+            '6': lambda: self.__apply_filter(6),
         }
 
         self.filter_commands.update(filter_commands)
@@ -234,6 +246,10 @@ class ImageApp:
             # Apply Sobel both filters
             if self.mode == "image" and self.image_original is not None:
                 self.image_processed = filtriraj_sobel_oboje(self.image_processed)
+        elif mode == 6:
+            # Apply Sobel both filters and highlight edges
+            if self.mode == "image" and self.image_original is not None:
+                self.image_processed = povdari_sobel(self.image_processed)
 
     # Image processing functions
     def __load_camera(self):
