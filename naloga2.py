@@ -1,43 +1,31 @@
-import cv2 as cv
 import numpy as np
 
+# Main funkcije
 def konvolucija(slika, jedro):
-    višina, širina = slika.shape
-    višina_jedra, širina_jedra = jedro.shape
+    if slika.ndim == 2:
+        slika = slika[:, :, np.newaxis]
     
-    # Ustvarjanje izhodne slike polne ničel
-    izhod = np.zeros((višina, širina), dtype=np.float32)
+    kernel_height, kernel_width = jedro.shape
+    image_height, image_width, num_channels = slika.shape
+    pad_height, pad_width = kernel_height // 2, kernel_width // 2
     
-    # Računanje robov za padding
-    pad_height = višina_jedra // 2
-    pad_width = širina_jedra // 2
+    padded_image = np.pad(slika, ((pad_height, pad_height), (pad_width, pad_width), (0, 0)), mode='constant', constant_values=0)
     
-    # Dodajanje paddinga k vhodni sliki
-    padded_image = np.pad(slika, ((pad_height, pad_height), (pad_width, pad_width)), mode='constant', constant_values=0)
+    new_image = np.zeros_like(slika)
     
-    # Izvajanje konvolucije
-    for i in range(višina):
-        for j in range(širina):
-            # Izračun konvolucije za vsako slikovno piko
-            izhod[i, j] = np.sum(jedro * padded_image[i:i+višina_jedra, j:j+širina_jedra])
+    for i in range(image_height):
+        for j in range(image_width):
+            for k in range(num_channels):
+                new_image[i, j, k] = (jedro * padded_image[i:i+kernel_height, j:j+kernel_width, k]).sum()
     
-    return izhod
+    if num_channels == 1:
+        return new_image[:, :, 0]
+    return new_image
 
 def filtriraj_z_gaussovim_jedrom(slika, sigma):
-    velikost_jedra = int(2 * np.round(3 * sigma) + 1)
+    velikost_jedra = int((2 * sigma) * 2 + 1)
+    k = (velikost_jedra - 1) // 2
+    gaussovo_jedro = np.fromfunction(lambda x, y: (1 / (2 * np.pi * sigma ** 2)) * np.exp(-((x - k) ** 2 + (y - k) ** 2) / (2 * sigma ** 2)), (velikost_jedra, velikost_jedra), dtype=np.float32)
+    #gaussovo_jedro /= gaussovo_jedro.sum()
     
-    ax = np.linspace(-(velikost_jedra - 1) / 2., (velikost_jedra - 1) / 2., velikost_jedra)
-    xx, yy = np.meshgrid(ax, ax)
-    
-    jedro = np.exp(-0.5 * (np.square(xx) + np.square(yy)) / np.square(sigma))
-    jedro /= np.sum(jedro)
-    
-    return konvolucija(slika, jedro)
-
-
-def filtriraj_sobel_smer(slika):
-    '''Filtrira sliko z Sobelovim jedrom in označi gradiente v orignalni sliki glede na ustrezen pogoj.'''
-    pass
-
-if __name__ == '__main__':    
-    pass
+    return konvolucija(slika, gaussovo_jedro)
