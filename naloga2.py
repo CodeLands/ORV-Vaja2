@@ -119,6 +119,7 @@ class ImageApp:
             't': self.__toggle_mode,
             'o': self.__show_commands,
             'f': self.__flip_image,
+            'n': self.__negate_image,
             'q': self.__stop
         }
 
@@ -168,6 +169,10 @@ class ImageApp:
         if self.image_processed is not None:
             self.image_processed = cv.flip(self.image_processed, 1)
             self.image_original = cv.flip(self.image_original, 1)
+
+    def __negate_image(self):
+        if self.image_processed is not None:
+            self.image_processed = cv.bitwise_not(self.image_processed)
 
     # Filter functions
     def __apply_filter(self, mode):
