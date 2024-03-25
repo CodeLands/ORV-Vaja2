@@ -45,6 +45,8 @@ class ImageApp:
         self.frame_overlay = None
         self.image_overlay = None
 
+        self.filter_mode = 1
+
         self.window_name = "ImageApp"
         cv.namedWindow(self.window_name, cv.WINDOW_NORMAL)
         self.window_size = (800, 600)
@@ -53,6 +55,7 @@ class ImageApp:
         self.root.withdraw()  # Hide the main window of tkinter
 
         self.image_mode_commands = {}
+        self.filter_commands = {}
         self.__setup_commands()
 
         # Initial black screen with "No image" text
@@ -73,6 +76,14 @@ class ImageApp:
             'o': self.__show_commands,
             'q': self.__stop
         }
+
+        # Shared filter commands
+        filter_commands = {
+            '1': lambda: self.__apply_filter(1),
+            '2': lambda: self.__apply_filter(2),
+        }
+
+        self.filter_commands.update(filter_commands)
 
     def __show_commands(self):
         print("Available commands:")
@@ -96,11 +107,24 @@ class ImageApp:
                 print("Error loading image from file.")
         self.__redraw_window(self.window_name, self.image_processed)
 
+    # Filter functions
+    def __apply_filter(self, mode):
+        self.filter_mode = mode
+        if mode == 1:
+            # Display original image/frame
+            if self.image_original is not None:
+                self.image_processed = self.image_original.copy()
+        elif mode == 2:
+            # Apply Gaussian filter
+            if self.image_original is not None:
+                self.image_processed = filtriraj_z_gaussovim_jedrom(self.image_processed, sigma=2)
+
     def __show_image(self):
         if self.image_processed is not None and self.image_processed.size > 0:
             cv.imshow(self.window_name, self.image_processed)
         else:
             print("Napaka: Slika nima veljavnih dimenzij.")
+
 
     # Process functions
     def __run(self):
@@ -113,6 +137,8 @@ class ImageApp:
             commands = self.image_mode_commands
             if chr(key) in commands:
                 commands[chr(key)]()
+            if chr(key) in self.filter_commands:
+                self.filter_commands[chr(key)]()
 
     def __stop(self):
         self.running = False
