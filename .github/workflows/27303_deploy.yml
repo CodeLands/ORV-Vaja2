@@ -22,7 +22,7 @@ jobs:
         uses: docker/login-action@v1
         with:
             username: ${{ secrets.DOCKER_USERNAME }}  # Your DockerHub username
-            password: ${{ secrets.DOCKER_PASSWORD }}  # Your DockerHub password
+            password: ${{ secrets.DOCKER_PAT }}  # Your DockerHub Personal Access Token
 
       - name: Build and push Docker image using a script
         run: |
