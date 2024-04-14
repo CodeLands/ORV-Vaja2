@@ -26,8 +26,8 @@ jobs:
 
       - name: Build and push Docker image using a script
         run: |
-         chmod +x ./CICD/zapakiraj_27303.sh
-         ./CICD/zapakiraj_27303.sh
+         chmod +x ./zapakiraj_27303.sh
+         ./zapakiraj_27303.sh
         env:
          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
          GITHUB_SHA: ${{ github.sha }}
