@@ -39,7 +39,8 @@ jobs:
 
       - name: Set output (for matrix use in next job)
         id: set-matrix
-        run: echo "::set-output name=matrix::{\"include\":[{\"python-version\":\"3.8\"},{\"python-version\":\"3.9\"}]}"
+        run: |
+          echo 'matrix={"include":[{"python-version":"3.8"},{"python-version":"3.9"}]}' >> $GITHUB_ENV
 
   run-tests:
     # Only run this job if the matrix output is not empty
