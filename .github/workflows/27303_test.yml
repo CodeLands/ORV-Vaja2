@@ -31,7 +31,7 @@ jobs:
 
       - name: Upload error log on failure
         if: failure()  # Only run this step if the previous step failed
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: error-log
           path: napaka.txt
@@ -67,7 +67,7 @@ jobs:
 
       - name: Download error log if exists
         if: always()  # Ensures this step always runs regardless of previous results
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: error-log
         continue-on-error: true  # Prevents the workflow from failing if no artifact is found
