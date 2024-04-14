@@ -43,10 +43,10 @@ jobs:
           echo 'matrix={"include":[{"python-version":"3.8"},{"python-version":"3.9"}]}' >> $GITHUB_ENV
 
   run-tests:
+    runs-on: self-hosted
     # Only run this job if the matrix output is not empty
     if: needs.check-tests.outputs.matrix != ''
     needs: check-tests  # This job needs to wait for check-tests to complete
-    runs-on: elf-hosted
     strategy:
       matrix: ${{fromJson(needs.check-tests.outputs.matrix)}}  # Use matrix strategy for multiple versions
     steps:
