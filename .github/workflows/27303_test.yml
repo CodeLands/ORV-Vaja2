@@ -9,7 +9,7 @@ on:
 jobs:
   check-tests:
     # Run this job on the latest version of Ubuntu
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
 
     # Set output for matrix use in the next job
     outputs:
@@ -40,13 +40,13 @@ jobs:
       - name: Set output (for matrix use in next job)
         id: set-matrix
         run: |
-          echo 'matrix={"include":[{"python-version":"3.8"},{"python-version":"3.9"}]}' >> $GITHUB_ENV
+          echo 'matrix={"include":[{"python-version":"3.8"},{"python-version":"3.9"}]}' >> $GITHUB_OUTPUT
 
   run-tests:
+    runs-on: self-hosted
     # Only run this job if the matrix output is not empty
     if: needs.check-tests.outputs.matrix != ''
     needs: check-tests  # This job needs to wait for check-tests to complete
-    runs-on: ubuntu-latest
     strategy:
       matrix: ${{fromJson(needs.check-tests.outputs.matrix)}}  # Use matrix strategy for multiple versions
     steps:
