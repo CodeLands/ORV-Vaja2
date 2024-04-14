@@ -3,7 +3,7 @@
 # Exit immediately if a command exits with a non-zero status and for any failures in pipelines.
 set -eo pipefail
 
-# Assign command line arguments to variables
+# Assign command line arguments to variables 
 DOCKER_USERNAME="$1"
 GITHUB_SHA="$2"
 
