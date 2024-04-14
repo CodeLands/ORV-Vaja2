@@ -67,7 +67,7 @@ jobs:
 
       - name: Download error log if exists
         if: always()  # Ensures this step always runs regardless of previous results
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: error-log
         continue-on-error: true  # Prevents the workflow from failing if no artifact is found
