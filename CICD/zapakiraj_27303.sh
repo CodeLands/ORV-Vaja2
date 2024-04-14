@@ -9,7 +9,7 @@ if [ -f .env ]; then
 fi
 
 # Build the Docker image
-docker build -t myapp:${GITHUB_SHA} ./CICD
+docker build -t myapp:${GITHUB_SHA} .
 
 # Tag the image for the repository on DockerHub
 docker tag myapp:${GITHUB_SHA} $DOCKER_USERNAME/myapp:latest
