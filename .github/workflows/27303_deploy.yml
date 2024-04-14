@@ -24,6 +24,9 @@ jobs:
             username: ${{ secrets.DOCKER_USERNAME }}  # Your DockerHub username
             password: ${{ secrets.DOCKER_PAT }}  # Your DockerHub Personal Access Token
 
+      - name: Echo DOCKER_USERNAME
+        run: echo "DOCKER_USERNAME is ${{ secrets.DOCKER_USERNAME }}"
+
       - name: Build and push Docker image using a script
         run: |
          chmod +x ./zapakiraj_27303.sh
