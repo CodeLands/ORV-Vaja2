@@ -46,9 +46,6 @@ class TestImageFilters(unittest.TestCase):
         # Apply the Sobel filter to detect the horizontal gradient
         filtrirana_slika = filtriraj_sobel_horizontalno(slika)
 
-        # Now, expect the output to be in grayscale with values between 0 to 255
-        # Check that the center value is greater than the average corner values,
-        # indicating the detection of the horizontal gradient.
         center_value = filtrirana_slika[1, 1]
         corner_values = np.array([filtrirana_slika[0, 0], filtrirana_slika[0, 2], filtrirana_slika[2, 0], filtrirana_slika[2, 2]])
         average_corner_value = np.mean(np.abs(corner_values))

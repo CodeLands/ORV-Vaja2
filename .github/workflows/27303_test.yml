@@ -1,6 +1,5 @@
 name: Test Application
 
-# Trigger the workflow on pushes to the main branch
 on:
   push:
     branches:
@@ -8,66 +7,58 @@ on:
 
 jobs:
   check-tests:
-    # Run this job on the latest version of Ubuntu
     runs-on: self-hosted
-
-    # Set output for matrix use in the next job
-    outputs:
-      matrix: ${{ steps.set-matrix.outputs.matrix }}
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4  # Checks-out your repository under $GITHUB_WORKSPACE
+        uses: actions/checkout@v4
 
       - name: Check test scripts exist
-        id: check
         run: |
-          if [ ! -f .tests/test.py ]; then  # Check if test script exists
+          if [ ! -f .tests/test.py ]; then
             echo "Test script not found." >&2
-            echo "Test script not found." > napaka.txt
-            exit 1  # Exit with failure if test script doesn't exist
+            echo "false" > napaka.txt
+          else
+            echo "true" > napaka.txt
           fi
-        continue-on-error: true  # Continue to next step even if this step fails
 
-      - name: Upload error log on failure
-        if: failure()  # Only run this step if the previous step failed
-        uses: actions/upload-artifact@v4
+      - name: Upload results as artifacts
+        uses: actions/upload-artifact@v3
         with:
-          name: error-log
+          name: workflow-artifacts
           path: napaka.txt
-        continue-on-error: true  # Prevents the workflow from failing if no error-log is created
-
-      - name: Set output (for matrix use in next job)
-        id: set-matrix
-        run: |
-          echo 'matrix={"include":[{"python-version":"3.8"},{"python-version":"3.9"}]}' >> $GITHUB_OUTPUT
 
   run-tests:
+    needs: check-tests
     runs-on: self-hosted
-    # Only run this job if the matrix output is not empty
-    if: needs.check-tests.outputs.matrix != ''
-    needs: check-tests  # This job needs to wait for check-tests to complete
     strategy:
-      matrix: ${{fromJson(needs.check-tests.outputs.matrix)}}  # Use matrix strategy for multiple versions
+      matrix:
+        python-version: [3.8, 3.9]
     steps:
+      - name: Download the workflow artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: workflow-artifacts
+
+      - name: Determine if tests should run
+        run: |
+          should_run_tests=$(cat napaka.txt)
+          if [[ "$should_run_tests" != "true" ]]; then
+            echo "Skipping tests due to errors."
+            exit 78  # Exits with neutral status to skip the job
+          fi
+
       - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: ${{ matrix.python-version }}  # Set Python version from matrix
-          cache: 'pip' # caching pip dependencies
+          python-version: ${{ matrix.python-version }}
+          cache: 'pip'
 
       - name: Install dependencies
         run: pip install -r requirements.txt
 
       - name: Run tests
-        run: python -m unittest discover -s .tests  # Run unit tests
-
-      - name: Download error log if exists
-        if: always()  # Ensures this step always runs regardless of previous results
-        uses: actions/download-artifact@v4
-        with:
-          name: error-log
-        continue-on-error: true  # Prevents the workflow from failing if no artifact is found
+        run: python -m unittest discover -s .tests
