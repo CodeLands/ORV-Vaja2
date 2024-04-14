@@ -9,7 +9,7 @@ on:
 jobs:
   check-tests:
     # Run this job on the latest version of Ubuntu
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
 
     # Set output for matrix use in the next job
     outputs:
@@ -46,7 +46,7 @@ jobs:
     # Only run this job if the matrix output is not empty
     if: needs.check-tests.outputs.matrix != ''
     needs: check-tests  # This job needs to wait for check-tests to complete
-    runs-on: ubuntu-latest
+    runs-on: elf-hosted
     strategy:
       matrix: ${{fromJson(needs.check-tests.outputs.matrix)}}  # Use matrix strategy for multiple versions
     steps:

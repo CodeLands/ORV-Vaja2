@@ -11,7 +11,7 @@ on:
 jobs:
   deploy:
     # Run this job on the latest version of Ubuntu
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     # Only proceed if the Test Application workflow was successful
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     steps:
