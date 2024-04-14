@@ -28,3 +28,6 @@ jobs:
         run: |
          chmod +x ./CICD/zapakiraj_27303.sh
          ./CICD/zapakiraj_27303.sh
+        env:
+         DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+         GITHUB_SHA: ${{ github.sha }}
