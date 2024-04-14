@@ -1,0 +1,30 @@
+name: Deploy Application
+
+# Trigger this workflow when the Test Application workflow completes
+on:
+  workflow_run:
+    workflows: ["Test Application"]
+    branches: [main]
+    types:
+      - completed
+
+jobs:
+  deploy:
+    # Run this job on the latest version of Ubuntu
+    runs-on: ubuntu-latest
+    # Only proceed if the Test Application workflow was successful
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2  # Checks-out your repository under $GITHUB_WORKSPACE
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v1
+        with:
+            username: ${{ secrets.DOCKER_USERNAME }}  # Your DockerHub username
+            password: ${{ secrets.DOCKER_PASSWORD }}  # Your DockerHub password
+
+      - name: Build and push Docker image using a script
+        run: |
+         chmod +x ./zapakiraj_27303.sh
+         ./zapakiraj_27303.sh
